@@ -4,8 +4,10 @@ import (
 	"first_task/go-fiber-api/internal/models"
 	"first_task/go-fiber-api/internal/services"
 	utils "first_task/go-fiber-api/pkg"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserHandler struct {
@@ -16,27 +18,32 @@ func NewUserHandler(s *services.UserService) *UserHandler {
 	return &UserHandler{Service: s}
 }
 
-// CreateUser godoc
-// @Summary Create a new user
-// @Description Add a new user to the system
-// @Tags users
-// @Accept  json
-// @Produce  json
-// @Param   user  body  models.User  true  "User Data"
-// @Success 201 {object} models.User
-// @Router /users [post]
+type CreateUserRequest struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+}
+
 func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
-	var user models.User
-	if err := c.BodyParser(&user); err != nil {
+	var req CreateUserRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Failed to parse request body",
 		})
 	}
+
+	user := models.User{
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+	}
+
 	if err := h.Service.CreateUser(&user); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create user",
 		})
 	}
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User created successfully",
 		"user":    user,
@@ -114,5 +121,72 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "User updated successfully",
 		"user":    user,
+	})
+}
+
+func (h *UserHandler) Protected(c *fiber.Ctx) error {
+	userToken := c.Locals("user")
+	if userToken == nil {
+		return c.Status(fiber.StatusUnauthorized).SendString("missing token")
+	}
+	token := userToken.(*jwt.Token) // from jwt middleware
+	claims := token.Claims.(jwt.MapClaims)
+	sub := claims["sub"]
+	name, _ := claims["name"].(string)
+	return c.SendString(fmt.Sprintf("hello user %v (name: %s)", sub, name))
+}
+
+type SignupRequest struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+}
+
+// Signup godoc
+// @Summary Register a new user
+// @Description Create a new user account, hash the password, and return access and refresh tokens
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param   user  body  SignupRequest  true  "User Signup Data"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /signup [post]
+func (h *UserHandler) Signup(c *fiber.Ctx) error {
+	var req SignupRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request"})
+	}
+
+	// hash password
+	hashed, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to hash password"})
+	}
+
+	user := models.User{
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		Password:  hashed,
+	}
+
+	if err := h.Service.CreateUser(&user); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to create user"})
+	}
+
+	// generate tokens
+	accessToken, refreshToken, err := utils.GenerateTokens(user.ID, user.Email)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to generate tokens"})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"user ID":       user.ID,
+		"message":       "user created successfully",
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
 	})
 }

@@ -1,5 +1,23 @@
 basePath: /api
 definitions:
+  handlers.LoginRequest:
+    properties:
+      id:
+        type: integer
+      pass:
+        type: string
+    type: object
+  handlers.SignupRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    type: object
   models.Book:
     properties:
       author:
@@ -152,6 +170,81 @@ paths:
       summary: Checkout a book
       tags:
       - books
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user by ID and password, returning an access token
+      parameters:
+      - description: User ID and Password
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Login a user
+      tags:
+      - auth
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account, hash the password, and return access
+        and refresh tokens
+      parameters:
+      - description: User Signup Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
   /users:
     get:
       description: Retrieve all users from the system
@@ -165,27 +258,6 @@ paths:
               $ref: '#/definitions/models.User'
             type: array
       summary: Get all users
-      tags:
-      - users
-    post:
-      consumes:
-      - application/json
-      description: Add a new user to the system
-      parameters:
-      - description: User Data
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.User'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.User'
-      summary: Create a new user
       tags:
       - users
     put:
