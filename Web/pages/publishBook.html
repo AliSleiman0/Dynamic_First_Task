@@ -1,0 +1,74 @@
+<div class="container mt-2" style="max-width: 700px;">
+  <div class="card shadow-lg border rounded">
+    <div class="card-body">
+      <h2 class="card-title mb-4 text-center">Publish a New Book</h2>
+
+      <form id="publishBookForm"
+           
+            hx-target="#bookResponse"
+            hx-swap="innerHTML"
+            class="needs-validation"
+            novalidate>
+        
+        <div class="mb-3">
+          <label for="title" class="form-label">Book Title</label>
+          <input type="text" class="form-control border rounded" id="title" name="title" placeholder="Enter book title" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="published_year" class="form-label">Published Year</label>
+          <input type="number" class="form-control border rounded" id="published_year" name="published_year" placeholder="2015" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="quantity" class="form-label">Quantity</label>
+          <input type="number" class="form-control border rounded" id="quantity" name="quantity" placeholder="3" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="genre" class="form-label">Genre</label>
+          <input type="text" class="form-control border rounded" id="genre" name="genre" placeholder="Fiction, Non-fiction..." required>
+        </div>
+
+        <div class="mb-3">
+          <label for="img_url" class="form-label">Cover Image URL</label>
+          <input type="url" class="form-control border rounded" id="img_url" name="img_url" placeholder="https://example.com/covers/go.png" required>
+        </div>
+    <input type="hidden" id="publisher_id" name="publisher_id" value="1" hidden>
+        <button type="submit" class="btn btn-primary w-100">Publish Book</button>
+      </form>
+
+      <div id="bookResponse" class="mt-4"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Inject JWT into all HTMX requests
+  document.getElementById('publishBookForm').addEventListener('submit', function(event) {
+  event.preventDefault();
+  const token = localStorage.getItem('authToken');
+
+  const data = {
+    title: document.getElementById('title').value,
+    published_year: parseInt(document.getElementById('published_year').value),
+    quantity: parseInt(document.getElementById('quantity').value),
+    genre: document.getElementById('genre').value,
+    img_url: document.getElementById('img_url').value,
+    publisher_id: parseInt(document.getElementById('publisher_id').value)
+  };
+
+  fetch('http://localhost:3000/api/books/', {
+    method: 'POST',
+    headers: {
+     'Authorization': `Bearer ${token}`, 
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+  .then(res => res.text())
+  .then(html => document.getElementById('bookResponse').innerHTML = "success")
+  .catch(err => console.error(err));
+});
+
+</script>

@@ -41,3 +41,19 @@ func (r *UserRepo) UpdateUser(user *models.User) error {
 	}
 	return nil
 }
+func (r *UserRepo) GetAllPublishersWithBookCount() ([]models.PublisherWithCount, error) {
+	var publishers []models.PublisherWithCount
+
+	query := `
+		SELECT DISTINCT u.id, u.first_name, u.last_name, u.email, u.created_at , u.updated_at , u.img_src,
+		       COUNT(b.id) as book_count
+		FROM users u
+		INNER JOIN books b ON u.id = b.publisher_id
+		GROUP BY u.id, u.first_name, u.last_name, u.email, u.created_at, u.updated_at, u.img_src
+		ORDER BY u.id
+	`
+
+	result := r.DB.Raw(query).Scan(&publishers)
+
+	return publishers, result.Error
+}

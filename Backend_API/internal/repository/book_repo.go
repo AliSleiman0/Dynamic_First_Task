@@ -14,9 +14,15 @@ type BookRepo struct {
 func (r *BookRepo) CreateBook(book *models.Book) error {
 	return r.DB.Create(book).Error
 }
-func (r *BookRepo) GetAllBooks() ([]models.Book, error) {
+func (r *BookRepo) GetAllBooks(search string) ([]models.Book, error) {
 	var books []models.Book
-	result := r.DB.Find(&books)
+
+	query := r.DB.Model(&models.Book{})
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("title LIKE ? OR genre LIKE ?", like, like)
+	}
+	result := query.Find(&books)
 	return books, result.Error
 }
 func (r *BookRepo) GetBookByID(id int) (*models.Book, error) {

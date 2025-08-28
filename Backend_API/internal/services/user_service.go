@@ -26,3 +26,6 @@ func (s *UserService) GetUserByID(id int) (*models.User, error) {
 func (s *UserService) UpdateUser(user *models.User) error {
 	return s.Repo.UpdateUser(user)
 }
+func (s *UserService) GetAllPublishersWithBookCount() ([]models.PublisherWithCount, error) {
+	return s.Repo.GetAllPublishersWithBookCount()
+}

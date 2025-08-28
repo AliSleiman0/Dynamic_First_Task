@@ -437,16 +437,23 @@ const docTemplate = `{
         "models.Book": {
             "type": "object",
             "properties": {
-                "author": {
-                    "type": "string"
-                },
                 "genre": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
+                "img_url": {
+                    "type": "string"
+                },
                 "published_year": {
+                    "type": "integer"
+                },
+                "publisher": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "publisher_id": {
+                    "description": "Foreign Key",
                     "type": "integer"
                 },
                 "quantity": {
@@ -460,6 +467,12 @@ const docTemplate = `{
         "models.User": {
             "type": "object",
             "properties": {
+                "books": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Book"
+                    }
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -471,6 +484,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "img_src": {
+                    "type": "string"
                 },
                 "last_name": {
                     "type": "string"

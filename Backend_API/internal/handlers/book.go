@@ -7,6 +7,10 @@ import (
 	"first_task/go-fiber-api/internal/models"
 	"first_task/go-fiber-api/internal/services"
 	utils "first_task/go-fiber-api/pkg"
+	"fmt"
+	"html"
+	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -55,16 +59,83 @@ func (B *BookHandler) CreateBook(c *fiber.Ctx) error {
 // @Produce  json
 // @Success 200 {array} models.Book
 // @Router /books [get]
+//
+//	func (B *BookHandler) GetAllBooks(c *fiber.Ctx) error {
+//		books, err := B.Service.GetAllBooks()
+//		if err != nil {
+//			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+//				"error": "Failed to retrieve books",
+//			})
+//		}
+//		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+//			"books": books,
+//		})
+//	}
 func (B *BookHandler) GetAllBooks(c *fiber.Ctx) error {
-	books, err := B.Service.GetAllBooks()
+	search := c.Query("search", "")
+
+	books, err := B.Service.GetAllBooksFiltered(search)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to retrieve books",
 		})
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"books": books,
-	})
+
+	// if user explicitly wants JSON: /api/books?format=json
+	if c.Query("format") == "json" {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"books": books,
+		})
+	}
+
+	// build a simple Bootstrap grid of cards
+	var sb strings.Builder
+	sb.WriteString(`<div class="row g-3">`)
+
+	if len(books) == 0 {
+		sb.WriteString(`<div class="col-12"><div class="alert alert-warning mb-0">No books found.</div></div>`)
+	} else {
+		for _, book := range books {
+			// fallback image
+			img := book.Img_url
+			if img == "" {
+				img = "https://via.placeholder.com/150x220?text=No+Cover"
+			}
+
+			// escape user-provided strings to avoid injecting HTML
+			title := html.EscapeString(book.Title)
+			genre := html.EscapeString(book.Genre)
+
+			sb.WriteString(fmt.Sprintf(`
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                  <div class="card h-100">
+                    <img src="%s" class="card-img-top" alt="%s cover" style="height:220px; object-fit:cover;">
+                    <div class="card-body d-flex flex-column">
+                      <h5 class="card-title">%s</h5>
+                      <p class="card-text mb-1"><small class="text-muted">Genre: %s</small></p>
+                      <p class="card-text mb-2"><small class="text-muted">Published: %d • Qty: %d</small></p>
+                      <div class="mt-auto">
+                        <button class="btn btn-sm btn-primary" 
+								type="button" 
+								hx-get="/books/%d/details" 
+								hx-target="#modalBody" 
+								hx-swap="innerHTML"
+								data-bs-toggle="modal" 
+								data-bs-target="#bookModal">
+						Details
+						</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            `, img, title, title, genre, book.PublishedYear, book.Quantity, book.ID))
+		}
+	}
+
+	sb.WriteString(`</div>`) // close row
+
+	// Return HTML fragment (suitable for htmx hx-get)
+	return c.Status(fiber.StatusOK).Type("html").SendString(sb.String())
 }
 
 // @Summary Get book by ID
@@ -141,4 +212,45 @@ func (B *BookHandler) Checkout(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Book checked out successfully",
 	})
+}
+func (B *BookHandler) GetBookDetails(c *fiber.Ctx) error {
+	// Parse ID param
+	idParam := c.Params("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString("Invalid book ID")
+	}
+
+	// Call service
+	book, err := B.Service.GetBookByID(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).SendString("Book not found")
+	}
+
+	// fallback image
+	img := book.Img_url
+	if img == "" {
+		img = "https://via.placeholder.com/300x400?text=No+Cover"
+	}
+
+	// checkin/checkout logic (for button label)
+	actionLabel := "Check Out"
+
+	html := fmt.Sprintf(`
+        <div class="d-flex flex-column align-items-center">
+            <img src="%s" alt="%s cover" class="img-fluid mb-3" style="max-height:400px; object-fit:cover;">
+            <h3>%s</h3>
+            <p class="text-muted">Genre: %s</p>
+            <p>Published: %d</p>
+            <p>Quantity: %d</p>
+            <button class="btn btn-success" 
+                    hx-post="/books/%d/toggle" 
+                    hx-target="#modalBody" 
+                    hx-swap="innerHTML">
+                %s
+            </button>
+        </div>
+    `, img, book.Title, book.Title, book.Genre, book.PublishedYear, book.Quantity, book.ID, actionLabel)
+
+	return c.Type("html").SendString(html)
 }

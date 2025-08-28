@@ -1,0 +1,28 @@
+<!-- pages/browseBooks.html -->
+<div class="container my-3">
+  <div class="input-group shadow-sm">
+    <input type="text" 
+           id="searchInput"
+           name="search" 
+           class="form-control border-start-0" 
+           placeholder="Search books by title, author, genre..."
+           aria-label="Search books"
+           hx-get="http://localhost:3000/api/books"
+           hx-trigger="keyup changed delay:500ms"
+           hx-target="#booksContainer"
+           hx-include="#searchInput"
+           hx-swap="innerHTML">
+
+    <!-- Clear button -->
+    <button class="btn btn-outline-secondary" type="button" 
+            onclick="document.getElementById('searchInput').value=''; htmx.trigger('#searchInput','keyup');">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+
+<div id="booksContainer"
+     hx-get="http://localhost:3000/api/books"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+</div>

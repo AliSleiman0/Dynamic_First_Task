@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore - Login</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #6f42c1;
+            --dark-color: #2e3a59;
+            --light-color: #f8f9fc;
+        }
+
+        body {
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            background-color: rgb(255, 255, 255);
+            border-radius: 15px;
+            box-shadow: 0px 10px 30px rgb(184, 179, 179);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, var(--dark-color) 0%, #3a4b7c 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .login-header i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .login-header h1 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .login-header p {
+            opacity: 0.8;
+            margin-bottom: 0;
+        }
+
+        .login-body {
+            padding: 30px;
+        }
+
+       
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+        }
+
+ 
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(78, 115, 223, 0.4);
+        }
+
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* HTMX loading indicator */
+        .htmx-indicator {
+            display: none;
+        }
+
+        .htmx-request .htmx-indicator {
+            display: inline-block;
+        }
+
+        .htmx-request .btn-text {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-book-open"></i>
+            <h1>Bookstore</h1>
+            <p>Sign in to your account</p>
+        </div>
+
+        <div class="login-body">
+            <div id="loginAlert"></div>
+
+            <form id="loginForm" hx-post="http://localhost:3000/api/login" hx-trigger="submit">
+
+                <div class="mb-3">
+                    <label for="userId" class="form-label">User ID</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="number" class="form-control" id="userId" name="id" placeholder="Enter your user ID"
+                            required min="1">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text d-flex align-items-center">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input type="password" class="form-control" id="password" name="pass"
+                            placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-login">
+                    <span class="btn-text">Sign In</span>
+                    <div class="htmx-indicator">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Signing in...
+                    </div>
+                </button>
+            </form>
+
+            <div class="footer-links">
+                <p>Don't have an account? <a href="sign_up.html">Sign up!</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap & HTMX JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+
+    <!-- Custom JS for handling login response -->
+    <script>
+        document.body.addEventListener('htmx:afterRequest', function (evt) {
+            if (evt.detail.requestConfig.elt.id === 'loginForm') {
+                if (evt.detail.xhr.status === 200) {
+                    // Login successful
+                    const response = JSON.parse(evt.detail.xhr.responseText);
+                    localStorage.setItem('authToken', response.token);
+
+                    // Show success message
+                    document.getElementById('loginAlert').innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>Login successful! Redirecting...
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+
+                    // Redirect to main page after a short delay
+                    setTimeout(function () {
+                        window.location.href = '../index.html';
+                    }, 1500);
+                } else if (evt.detail.xhr.status === 401 || evt.detail.xhr.status === 400) {
+                    // Login failed - show error message
+                    const response = JSON.parse(evt.detail.xhr.responseText);
+                    document.getElementById('loginAlert').innerHTML = `
+                          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>${response.error}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                } else if (evt.detail.xhr.status === 0) {
+                    // Network error
+                    document.getElementById('loginAlert').innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Network error. Please check your connection.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                }
+            }
+        });
+
+        // Handle form validation
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            const userId = document.getElementById('userId').value;
+            const password = document.getElementById('password').value;
+
+            if (!userId || !password) {
+                event.preventDefault();
+                document.getElementById('loginAlert').innerHTML = `
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Please fill in all fields.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+
+</html>

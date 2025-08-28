@@ -1,0 +1,88 @@
+<!-- Hero Section -->
+            <div class="hero-section text-center mb-5">
+                <h1 class="display-4 fw-bold mb-3">Manage Your Book Collection</h1>
+                <p class="lead mb-4">A modern web application for book enthusiasts, libraries, and publishers</p>
+                <a href="#target-section" class="btn btn-lg btn-light">Get Started <i
+                        class="bi bi-arrow-right ms-2"></i></a>
+            </div>
+
+            <!-- Features Grid -->
+            <div id="target-section" class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <div class="card-icon">
+                                <i class="bi bi-search"></i>
+                            </div>
+                            <h3 class="h4">Browse Books</h3>
+                            <p class="text-muted">Explore our extensive collection of books from various genres and
+                                publishers.</p>
+                            <a hx-get="pages/browseBooks.html" hx-target="#mainpageid" hx-swap="innerHTML" class="btn btn-sm btn-outline-primary">Explore</a>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <div class="card-icon">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <h3 class="h4">Publishers</h3>
+                            <p class="text-muted">Discover books by publisher and explore their complete catalogs.</p>
+                            <a hx-get="pages/browsePublishers.html" hx-target="#mainpageid" hx-swap="innerHTML" class="btn btn-sm btn-outline-primary">Browse Publishers</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <div class="card-icon">
+                                <i class="bi bi-journal-plus"></i>
+                            </div>
+                            <h3 class="h4">Publish</h3>
+                            <p class="text-muted">Add your own books to the collection and share them with the
+                                community.</p>
+
+                             <a hx-get="pages/publishBook.html" hx-target="#mainpageid" hx-swap="innerHTML" class="btn btn-sm btn-outline-primary">Publish Now!</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+              <!-- Demo Content Section -->
+            <div class="row align-items-center mb-5">
+                <div class="col-lg-6">
+                    <h2 class="fw-bold mb-4">Why Choose BookManager Pro?</h2>
+                    <div class="d-flex mb-3">
+                        <div class="me-4">
+                            <i class="bi bi-lightning-fill text-primary fs-1"></i>
+                        </div>
+                        <div>
+                            <h4 class="h5">Lightning Fast</h4>
+                            <p class="text-muted">Built with HTMX for a responsive and smooth user experience.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="me-4">
+                            <i class="bi bi-arrows-expand-vertical text-primary fs-1"></i>
+                        </div>
+                        <div>
+                            <h4 class="h5">Fully Responsive</h4>
+                            <p class="text-muted">Works perfectly on all devices from mobile to desktop.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="me-4">
+                            <i class="bi bi-safe2 text-primary fs-1"></i>
+                        </div>
+                        <div>
+                            <h4 class="h5">Secure & Reliable</h4>
+                            <p class="text-muted">Your data is protected with industry-standard security practices.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=700&q=80"
+                        alt="Reading" class="img-fluid rounded shadow">
+                </div>
+            </div>

@@ -5,6 +5,8 @@ import (
 	"first_task/go-fiber-api/internal/services"
 	utils "first_task/go-fiber-api/pkg"
 	"fmt"
+	"html"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -189,4 +191,89 @@ func (h *UserHandler) Signup(c *fiber.Ctx) error {
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	})
+}
+func (h *UserHandler) GetAllPublishersWithoutBooks(c *fiber.Ctx) error {
+	publishers, err := h.Service.GetAllPublishersWithBookCount()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve publishers",
+		})
+	}
+
+	// Return JSON if explicitly requested
+	if c.Query("format") == "json" {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"publishers": publishers,
+		})
+	}
+
+	// Build HTML response
+	var sb strings.Builder
+	sb.WriteString(`<div class="row g-4">`) // Increased gutter for better spacing
+
+	if len(publishers) == 0 {
+		sb.WriteString(`<div class="col-12"><div class="alert alert-info mb-0 text-center py-4"><i class="fas fa-info-circle me-2"></i>No publishers found in the system.</div></div>`)
+	} else {
+		for _, publisher := range publishers {
+			// Escape all user-provided strings to prevent XSS
+			fullName := html.EscapeString(publisher.FirstName + " " + publisher.LastName)
+			email := html.EscapeString(publisher.Email)
+
+			// Format dates
+			joinedDate := publisher.CreatedAt.Format("Jan 2, 2006")
+			//updatedDate := publisher.UpdatedAt.Format("Jan 2, 2006")
+
+			// Use placeholder image if none exists
+			imgSrc := publisher.ImgSrc
+			if imgSrc == "" {
+				imgSrc = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
+			}
+
+			sb.WriteString(fmt.Sprintf(`
+<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+	<div class="card publisher-card h-100 shadow-sm border-2 rounded-4 overflow-hidden position-relative">
+		<div class="card-img-container position-relative">
+			<img src="%s" class="card-img-top rounded-top-4" alt="%s" style="height: 250px; object-fit: cover; transition: transform 0.3s;">
+			<div class="position-absolute top-0 end-0 m-2">
+				<span class="badge bg-primary rounded-pill shadow">%d Book(s)</span>
+			</div>
+		</div>
+		<div class="card-body d-flex flex-column">
+			<h5 class="card-title text-truncate" title="%s">%s</h5>
+			<div class="publisher-details mb-3">
+				<div class="d-flex align-items-center mb-1">
+					<i class="fas fa-envelope text-muted me-2"></i>
+					<small class="text-truncate" title="%s">%s</small>
+				</div>
+				<div class="d-flex align-items-center mb-1">
+					<i class="fas fa-calendar-plus text-muted me-2"></i>
+					<small class="text-muted">Joined: %s</small>
+				</div>
+			</div>
+			<div class="mt-auto d-flex justify-content-between align-items-center">
+				
+				<button class="btn btn-sm btn-outline-primary d-flex align-items-center" type="button"
+				hx-get="pages/browseBooks.html" hx-target="#mainpageid" hx-swap="innerHTML"
+					>
+					<i class="fas fa-eye me-1"></i> View books
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	// Hover zoom effect for card images
+	const cards = document.querySelectorAll('.publisher-card .card-img-top');
+	cards.forEach(img => {
+		img.addEventListener('mouseenter', () => img.style.transform = 'scale(1.05)');
+		img.addEventListener('mouseleave', () => img.style.transform = 'scale(1)');
+	});
+</script>
+`, imgSrc, fullName, publisher.BookCount, fullName, fullName, email, email, joinedDate))
+		}
+	}
+	sb.WriteString(`</div>`)
+
+	return c.Status(fiber.StatusOK).Type("html").SendString(sb.String())
 }

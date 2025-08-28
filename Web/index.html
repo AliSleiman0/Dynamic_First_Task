@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Font Awesome 5 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #6f42c1;
+            --dark-color: #38414a;
+            --light-color: #f8f9fc;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8f9fc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: 0.375rem;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        .footer {
+            background-color: var(--dark-color);
+            color: white;
+            margin-top: auto;
+        }
+
+        .footer a {
+            color: #e9ecef;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .social-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-5px);
+        }
+
+        .hero-section {
+            background: linear-gradient(rgba(78, 115, 223, 0.85), rgba(111, 66, 193, 0.85)), url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80') center/cover;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .navbar-toggler {
+            border: none;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="header-container" hx-get="Components/header.html" hx-trigger="load" hx-swap="innerHTML">
+    </div>
+    <!-- Main Content -->
+    <div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- modal-lg for bigger view -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookModalLabel">Book Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- HTMX will load book details here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <main class="main-content" id="main-body">
+        <div class="container" id="mainpageid">
+
+            <div id="home-container" hx-get="pages/homescreen.html" hx-trigger="load" hx-swap="innerHTML">
+            </div>
+        </div>
+    </main>
+    <!-- Footer -->
+    <div id="footer-container" hx-get="Components/footer.html" hx-trigger="load" hx-swap="innerHTML">
+    </div>
+    <!-- Bootstrap 5 JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+</body>
+<script>
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (evt.detail.target.id === 'header-container') {
+            const navLink = document.getElementById('authNavLink');
+            const profileLink = document.getElementById('profileLink'); // use id
+            const token = localStorage.getItem('authToken');
+
+            if (!navLink) return; // safety check
+
+            if (token) {
+                // Show profile link if user is logged in
+                if (profileLink) profileLink.style.display = 'inline-flex';
+
+                navLink.innerHTML = `<i class="bi bi-box-arrow-right me-1"></i> Logout`;
+                navLink.onclick = function (e) {
+                    e.preventDefault();
+                    localStorage.removeItem('authToken');
+                    window.location.href = 'pages/login.html';
+                }
+            } else {
+                // Hide profile link if user is not logged in
+                if (profileLink) profileLink.style.display = 'none';
+
+                navLink.innerHTML = `<i class="bi bi-box-arrow-in-right me-1"></i> Login`;
+                navLink.onclick = function (e) {
+                    e.preventDefault();
+                    window.location.href = 'pages/login.html';
+                }
+            }
+        }
+    });
+    document.addEventListener("htmx:afterSwap", function () {
+    const token = localStorage.getItem("authToken"); 
+    if (token) {
+        const profileDiv = document.getElementById("profile2");
+
+        // Set headers dynamically
+        profileDiv.setAttribute("hx-headers", JSON.stringify({
+            "Authorization": "Bearer " + token
+        }));
+
+        // Trigger HTMX request manually
+        if (typeof htmx !== "undefined") {
+            htmx.trigger(profileDiv, "load");
+        }
+    }
+});
+// Intercept every htmx request and inject token
+document.body.addEventListener('htmx:configRequest', function(evt) {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      evt.detail.headers['Authorization'] =  `Bearer ${token}`;
+    }
+  });
+
+document.body.addEventListener('htmx:responseError', function (evt) {
+    if (evt.detail.xhr.status === 401) {
+      // Clear token
+      localStorage.removeItem('authToken');
+      // Redirect to login page
+      window.location.href = 'pages/login.html';
+    }
+  });
+</script>
+
+</html>
